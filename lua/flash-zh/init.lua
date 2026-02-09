@@ -4,6 +4,7 @@ local flypy = require("flash-zh.flypy")
 local M = {}
 
 function M.jump(opts)
+	opts = opts or {}
 	local mode = M.mix_mode
 	if opts.chinese_only then
 		mode = M.zh_mode
@@ -16,8 +17,26 @@ function M.jump(opts)
 		labeler = function(_, state)
 			require("flash-zh.labeler").new(state):update()
 		end,
-	}, opts or {})
+	}, opts)
 	flash.jump(opts)
+end
+
+function M.remote(opts)
+	opts = opts or {}
+	local mode = M.mix_mode
+	if opts.chinese_only then
+		mode = M.zh_mode
+	end
+	opts = vim.tbl_deep_extend("force", {
+		labels = "asdfghjklqwertyuiopzxcvbnm",
+		search = {
+			mode = mode,
+		},
+		labeler = function(_, state)
+			require("flash-zh.labeler").new(state):update()
+		end,
+	}, opts)
+	flash.remote(opts)
 end
 
 function M.mix_mode(str)
