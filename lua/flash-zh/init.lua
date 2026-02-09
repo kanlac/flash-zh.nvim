@@ -29,6 +29,31 @@ function M.jump(opts)
 	flash.jump(opts)
 end
 
+function M.remote(opts)
+	opts = opts or {}
+
+	-- Same behavior as jump(), but performs a remote operation (operator-pending).
+	if opts.scheme then
+		require("flash-zh.char_map").set(opts.scheme)
+		opts.scheme = nil
+	end
+
+	local mode = M.mix_mode
+	if opts.chinese_only then
+		mode = M.zh_mode
+	end
+	opts = vim.tbl_deep_extend("force", {
+		labels = "asdfghjklqwertyuiopzxcvbnm",
+		search = {
+			mode = mode,
+		},
+		labeler = function(_, state)
+			require("flash-zh.labeler").new(state):update()
+		end,
+	}, opts)
+	flash.remote(opts)
+end
+
 function M.mix_mode(str)
 	local all_possible_splits = M.parser(str)
 	local regexs = { [[\(]] }
