@@ -45,13 +45,16 @@ function M.zh_mode(str)
 	local map = char_map.get()
 	local regexs = {}
 	while string.len(str) > 1 do
-		local k = string.sub(str, 1, 2)
+		local orig = string.sub(str, 1, 2)
+		local k = orig:lower()
 		-- Be defensive: unknown keys should not crash the search.
-		regexs[#regexs + 1] = map.char2patterns[k] or ("[" .. k .. string.upper(k) .. "]")
+		regexs[#regexs + 1] = map.char2patterns[k] or ("[" .. orig:lower() .. orig:upper() .. "]")
 		str = string.sub(str, 3)
 	end
 	if string.len(str) == 1 then
-		regexs[#regexs + 1] = map.char1patterns[str] or ("[" .. str .. string.upper(str) .. "]")
+		local orig = str
+		local k = orig:lower()
+		regexs[#regexs + 1] = map.char1patterns[k] or ("[" .. orig:lower() .. orig:upper() .. "]")
 	end
 	local ret = table.concat(regexs)
 	return ret, ret
@@ -60,7 +63,7 @@ end
 local function get_nodes(map)
 	return {
 		alpha = function(str)
-			return "[" .. str .. string.upper(str) .. "]"
+			return "[" .. str:lower() .. str:upper() .. "]"
 		end,
 		pinyin = function(str)
 			return map.char2patterns[str]
@@ -103,13 +106,14 @@ function M.parser(str, prefix)
 		if secondchar == "" then
 			local prefix2 = M.copy(prefix)
 			prefix[#prefix + 1] = { str = firstchar, type = "alpha" }
-			prefix2[#prefix2 + 1] = { str = firstchar, type = "singlepin" }
+			prefix2[#prefix2 + 1] = { str = firstchar:lower(), type = "singlepin" }
 			return { prefix, prefix2 }
 		elseif string.match(secondchar, "%a") then
-			if map.char2patterns[firstchar .. secondchar] then
+			local code = (firstchar .. secondchar):lower()
+			if map.char2patterns[code] then
 				local prefix2 = M.copy(prefix)
 				prefix2[#prefix2 + 1] = { str = firstchar, type = "alpha" }
-				prefix[#prefix + 1] = { str = firstchar .. secondchar, type = "pinyin" }
+				prefix[#prefix + 1] = { str = code, type = "pinyin" }
 				local str2 = string.sub(str, 2, -1)
 				str = string.sub(str, 3, -1)
 				return M.merge_table(M.parser(str, prefix), M.parser(str2, prefix2))
